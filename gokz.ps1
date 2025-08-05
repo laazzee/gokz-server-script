@@ -3,7 +3,7 @@
 # as that may overwrite your configs, or not work at all in some cases.
 # For example, set this to:
 # $steamCmdDir = "C:\steamcmd"
-$steamCmdDir = "C:\steamcmd"
+$steamCmdDir = "D:\csgo_server"
 
 # Set this to the path of your game's CSGO folder if you want your maps/models/materials/sound/scripts folders to be
 # symlinked to the server, this is useful when mapping. MAKE SURE TO INCLUDE THE 'csgo' DIRECTORY!!!
@@ -16,6 +16,9 @@ $gameDir = ""
 # For example, set this to:
 # $startMap = "kz_beginnerblock_go"
 $startMap = ""
+
+# Set this to main admin steamid in STEAM_X:Y:Z format
+$adminSteamID = ""
 
 # =======================================
 
@@ -72,7 +75,7 @@ if (-Not (Test-Path -Path $downloadDir)) {
 }
 Set-Location -Path $downloadDir
 
-$metamodVersion = "1.11"
+$metamodVersion = "1.12"
 $metamodLatest = Invoke-WebRequest -Uri "https://mms.alliedmods.net/mmsdrop/$metamodVersion/mmsource-latest-windows" -UseBasicParsing
 $metamodLatestUrl = "https://mms.alliedmods.net/mmsdrop/$metamodVersion/$metamodLatest"
 $metamodInstalled = Get-Content -Path "metamod-installed.txt" -ErrorAction SilentlyContinue
@@ -112,15 +115,12 @@ $sourcemodDatabasesFile = @"
 	"gokz"
 	{
 		"driver"			"sqlite"
-		"host"				"localhost"
 		"database"			"gokz-sqlite"
-		"user"				"root"
-		"pass"				""
 	}
 }
 "@
 
-$sourcemodVersion = "1.11"
+$sourcemodVersion = "1.12"
 $sourcemodLatest = Invoke-WebRequest -Uri "https://sm.alliedmods.net/smdrop/$sourcemodVersion/sourcemod-latest-windows" -UseBasicParsing
 $sourcemodLatestUrl = "https://sm.alliedmods.net/smdrop/$sourcemodVersion/$sourcemodLatest"
 $sourcemodInstalled = Get-Content -Path "sourcemod-installed.txt" -ErrorAction SilentlyContinue
@@ -142,6 +142,7 @@ if ($sourcemodInstalled -ne $sourcemodLatest) {
     $adminsPath = "$csgoDir\\addons\\sourcemod\\configs\\admins_simple.ini"
     if (-Not (Test-Path -Path $adminsPath)) {
         Set-Content -Path $adminsPath -Value '"!127.0.0.1" "99:z"'
+        Add-Content -Path $adminsPath -Value "`"$adminSteamID`" `"99:z`""
     }
 }
 
@@ -200,15 +201,17 @@ if ($startMap.Length -eq 0) {
     $startMapDir = "$csgoDir\\maps\\$startMap.bsp"
     if (-Not (Test-Path -Path $startMapDir)) {
         Write-Output "Downloading $startMap (default start map)"
-        Invoke-WebRequest -Uri "https://maps.global-api.com/bsps/kz_beginnerblock_go.bsp" -OutFile $startMapDir
+        Invoke-WebRequest -Uri "https://files.femboy.kz/fastdl/csgo/maps/kz_beginnerblock_go.bsp" -OutFile $startMapDir
     }
 }
+
 
 Set-Location -Path $srcdsDir
 $srcdsArgList = @("-game", "csgo")
 $srcdsArgList += @("-console")
 $srcdsArgList += @("-usercon")
 $srcdsArgList += @("-nobreakpad")
+$srcdsArgList += @("-port 27018")
 $srcdsArgList += @("-tickrate", "128")
 $srcdsArgList += @("+sv_lan", "1")
 $srcdsArgList += @("+hostname", '"GOKZ Server"')
